@@ -871,7 +871,7 @@ static void JSQInstallWorkaroundForSheetPresentationIssue26295020(void) {
 
 - (void)jsq_setCollectionViewInsetsTopValue:(CGFloat)top bottomValue:(CGFloat)bottom
 {
-    UIEdgeInsets insets = UIEdgeInsetsMake(self.topLayoutGuide.length + top, 0.0f, bottom, 0.0f);
+    UIEdgeInsets insets = UIEdgeInsetsMake(self.topLayoutGuide.length + top, 0.0f, MAX(bottom, 44.0), 0.0f);
     self.collectionView.contentInset = insets;
     self.collectionView.scrollIndicatorInsets = insets;
 }
@@ -933,7 +933,6 @@ static void JSQInstallWorkaroundForSheetPresentationIssue26295020(void) {
     NSDictionary *userInfo = [notification userInfo];
 
     CGRect keyboardEndFrame = [userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
-
     if (CGRectIsNull(keyboardEndFrame)) {
         return;
     }
@@ -948,10 +947,28 @@ static void JSQInstallWorkaroundForSheetPresentationIssue26295020(void) {
                         options:animationCurveOption
                      animations:^{
                          const UIEdgeInsets insets = self.additionalContentInset;
+                         double bottomValue = self.isFirstResponder ? CGRectGetHeight(keyboardEndFrame) + insets.bottom : insets.bottom;
+                         /* Instead of using `self.isFirstResponder`, The code defined in the comment below
+                          (viewContainsFirstResponder) will determine if the view (self.view) contains the first responder,
+                          for future note */
                          [self jsq_setCollectionViewInsetsTopValue:insets.top
-                                                       bottomValue:CGRectGetHeight(keyboardEndFrame) + insets.bottom];
+                                                       bottomValue:bottomValue];
                      }
                      completion:nil];
 }
+
+
+//- (BOOL)viewContainsFirstResponder:(UIView *)view
+//{
+//    if (view.isFirstResponder){
+//        return true;
+//    }
+//    for (UIView *subView in view.subviews){
+//        if ([self viewContainsFirstResponder:subView]){
+//            return true;
+//        }
+//    }
+//    return false;
+//}
 
 @end
